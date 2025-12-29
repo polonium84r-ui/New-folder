@@ -23,32 +23,13 @@ app.use(helmet({
   }
 }));
 
-// CORS configuration for both development and production
-const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:3000', // Local development
-      'http://127.0.0.1:3000', // Alternative local
-      process.env.FRONTEND_URL, // Production URL
-      'https://all-screening-frontend.onrender.com' // Render production
-    ].filter(Boolean); // Remove undefined values
-    
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+// CORS configuration - disable for single-service deployment
+app.use(cors({
+  origin: true, // Allow all origins since frontend and backend are on same domain
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
+}));
 
 // Rate limiting
 const limiter = rateLimit({
