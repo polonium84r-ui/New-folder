@@ -116,12 +116,19 @@ const AnalysisProcessing = () => {
             
             // Navigate to results page
             setTimeout(() => {
+              // Store image data for results page
+              if (analysisData.base64) {
+                sessionStorage.setItem('currentAnalysisImage', analysisData.base64);
+                sessionStorage.setItem('currentAnalysisImageName', analysisData.fileName);
+              }
+              
               navigate('/analysis-results', {
                 state: {
                   results: response.data.results,
                   patientInfo: defaultPatientInfo,
                   analysisId: response.data.analysisId,
-                  analysisData: analysisData
+                  analysisData: analysisData,
+                  imageData: analysisData.base64 // Include base64 image data
                 }
               });
             }, 1500);

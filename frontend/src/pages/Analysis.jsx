@@ -83,17 +83,37 @@ const Analysis = () => {
       console.log('Starting upload process...');
       console.log('User token:', localStorage.getItem('token'));
       
-      // Navigate directly to processing page with file data only
-      navigate('/analysis-processing', {
-        state: {
-          analysisData: {
-            file: selectedFile,
-            fileName: selectedFile.name,
-            fileSize: selectedFile.size,
-            fileType: selectedFile.type
+      // Convert file to base64 and store in sessionStorage for reliable access
+      const fileReader = new FileReader();
+      fileReader.onload = (e) => {
+        const base64Data = e.target.result;
+        
+        // Store image data in sessionStorage for reliable access across pages
+        sessionStorage.setItem('currentAnalysisImage', base64Data);
+        sessionStorage.setItem('currentAnalysisImageName', selectedFile.name);
+        
+        // Navigate to processing page with file data
+        navigate('/analysis-processing', {
+          state: {
+            analysisData: {
+              file: selectedFile,
+              fileName: selectedFile.name,
+              fileSize: selectedFile.size,
+              fileType: selectedFile.type,
+              base64: base64Data // Include base64 data
+            }
           }
-        }
-      });
+        });
+      };
+      
+      fileReader.onerror = () => {
+        console.error('Failed to read file');
+        toast.error('Failed to read image file. Please try again.');
+        setIsUploading(false);
+      };
+      
+      // Read file as data URL (base64)
+      fileReader.readAsDataURL(selectedFile);
       
     } catch (error) {
       console.error('Upload error:', error);

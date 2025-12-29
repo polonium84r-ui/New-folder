@@ -561,7 +561,10 @@ router.post('/process', async (req, res) => {
       success: true,
       analysisId: analysis._id,
       status: 'completed',
-      results: analysis.analysisResults
+      results: {
+        ...analysis.analysisResults,
+        imageUrl: analysis.imageUrl // Include the image URL in the response
+      }
     });
 
   } catch (error) {

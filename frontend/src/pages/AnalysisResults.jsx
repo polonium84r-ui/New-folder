@@ -32,6 +32,21 @@ const AnalysisResults = () => {
   const analysisData = location.state?.analysisData;
   const results = location.state?.results;
 
+  // Debug logging
+  useEffect(() => {
+    console.log('AnalysisResults Debug Info:');
+    console.log('- Results:', results);
+    console.log('- Results imageUrl:', results?.imageUrl);
+    console.log('- Analysis Data:', analysisData);
+    console.log('- Analysis ID:', location.state?.analysisId);
+    console.log('- File object available:', !!analysisData?.file);
+    console.log('- File name:', analysisData?.fileName);
+    console.log('- Base64 data available:', !!analysisData?.base64);
+    console.log('- Navigation state imageData:', !!location.state?.imageData);
+    console.log('- SessionStorage image:', !!sessionStorage.getItem('currentAnalysisImage'));
+    console.log('- Current image preview:', imagePreview);
+  }, [results, analysisData, imagePreview]);
+
   useEffect(() => {
     // Redirect if no results data
     if (!results) {
@@ -39,15 +54,103 @@ const AnalysisResults = () => {
       return;
     }
 
-    // Create image preview from file data
-    if (analysisData?.file) {
-      const url = URL.createObjectURL(analysisData.file);
-      setImagePreview(url);
-      
-      // Cleanup URL when component unmounts
-      return () => URL.revokeObjectURL(url);
-    }
+    // Load image using multiple fallback methods
+    loadImageData();
+    
+    // Cleanup function to clear sessionStorage when component unmounts
+    return () => {
+      // Don't clear immediately, wait a bit in case user is navigating back
+      setTimeout(() => {
+        sessionStorage.removeItem('currentAnalysisImage');
+        sessionStorage.removeItem('currentAnalysisImageName');
+      }, 5000);
+    };
   }, [results, analysisData, navigate]);
+
+  // Comprehensive image loading with multiple fallback methods
+  const loadImageData = async () => {
+    console.log('Loading image data...');
+    
+    // Method 1: Try imageUrl from results (backend response)
+    if (results?.imageUrl) {
+      console.log('Using imageUrl from results');
+      setImagePreview(results.imageUrl);
+      return;
+    }
+    
+    // Method 2: Try base64 data from navigation state
+    if (location.state?.imageData) {
+      console.log('Using base64 data from navigation state');
+      setImagePreview(location.state.imageData);
+      return;
+    }
+    
+    // Method 3: Try base64 data from analysisData
+    if (analysisData?.base64) {
+      console.log('Using base64 data from analysisData');
+      setImagePreview(analysisData.base64);
+      return;
+    }
+    
+    // Method 4: Try sessionStorage
+    const storedImage = sessionStorage.getItem('currentAnalysisImage');
+    if (storedImage) {
+      console.log('Using image from sessionStorage');
+      setImagePreview(storedImage);
+      return;
+    }
+    
+    // Method 5: Try file object
+    if (analysisData?.file) {
+      try {
+        console.log('Creating blob URL from file object');
+        const url = URL.createObjectURL(analysisData.file);
+        setImagePreview(url);
+        
+        // Cleanup URL when component unmounts
+        return () => URL.revokeObjectURL(url);
+      } catch (error) {
+        console.warn('Failed to create object URL from file:', error);
+      }
+    }
+    
+    // Method 6: Try backend API
+    await fetchImageFromBackend();
+  };
+
+  // Function to fetch image from backend API
+  const fetchImageFromBackend = async () => {
+    try {
+      const analysisId = location.state?.analysisId;
+      if (!analysisId) {
+        console.warn('No analysis ID available to fetch image');
+        return;
+      }
+
+      console.log('Fetching image from backend API...');
+      const response = await fetch(`/api/analysis/${analysisId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.ok) {
+        const analysisData = await response.json();
+        if (analysisData.imageUrl) {
+          console.log('Successfully loaded image from backend');
+          setImagePreview(analysisData.imageUrl);
+          // Store in sessionStorage for future use
+          sessionStorage.setItem('currentAnalysisImage', analysisData.imageUrl);
+        } else {
+          console.warn('No image URL found in backend response');
+        }
+      } else {
+        console.error('Failed to fetch analysis from backend:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching image from backend:', error);
+    }
+  };
 
   if (!results) {
     return null;
@@ -734,10 +837,52 @@ const AnalysisResults = () => {
                     src={imagePreview}
                     alt="Original blood smear"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.warn('Original image failed to load:', e.target.src);
+                      
+                      // Try sessionStorage first
+                      if (!e.target.dataset.sessionTried) {
+                        const storedImage = sessionStorage.getItem('currentAnalysisImage');
+                        if (storedImage && storedImage !== e.target.src) {
+                          console.log('Retrying with sessionStorage image');
+                          e.target.src = storedImage;
+                          e.target.dataset.sessionTried = 'true';
+                          return;
+                        }
+                      }
+                      
+                      // Try to recreate the blob URL if file is available
+                      if (analysisData?.file && !e.target.dataset.retried) {
+                        try {
+                          const newUrl = URL.createObjectURL(analysisData.file);
+                          e.target.src = newUrl;
+                          e.target.dataset.retried = 'true';
+                          console.log('Retrying with new blob URL');
+                          return;
+                        } catch (error) {
+                          console.error('Failed to recreate blob URL:', error);
+                        }
+                      }
+                      
+                      // Last resort: try to fetch from backend
+                      if (!e.target.dataset.backendTried) {
+                        e.target.dataset.backendTried = 'true';
+                        console.log('Trying backend fetch as last resort');
+                        fetchImageFromBackend().then(() => {
+                          if (imagePreview && imagePreview !== e.target.src) {
+                            e.target.src = imagePreview;
+                          }
+                        });
+                      }
+                    }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <BloodCellAI className="w-16 h-16 text-gray-400" />
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                    <BloodCellAI className="w-16 h-16 text-gray-400 mb-2" />
+                    <p className="text-sm">Image not available</p>
+                    {analysisData?.fileName && (
+                      <p className="text-xs text-gray-400 mt-1">{analysisData.fileName}</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -754,6 +899,44 @@ const AnalysisResults = () => {
                       src={imagePreview}
                       alt="Analyzed blood smear"
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.warn('Analyzed image failed to load:', e.target.src);
+                        
+                        // Try sessionStorage first
+                        if (!e.target.dataset.sessionTried) {
+                          const storedImage = sessionStorage.getItem('currentAnalysisImage');
+                          if (storedImage && storedImage !== e.target.src) {
+                            console.log('Retrying analyzed image with sessionStorage');
+                            e.target.src = storedImage;
+                            e.target.dataset.sessionTried = 'true';
+                            return;
+                          }
+                        }
+                        
+                        // Try to recreate the blob URL if file is available
+                        if (analysisData?.file && !e.target.dataset.retried) {
+                          try {
+                            const newUrl = URL.createObjectURL(analysisData.file);
+                            e.target.src = newUrl;
+                            e.target.dataset.retried = 'true';
+                            console.log('Retrying analyzed image with new blob URL');
+                            return;
+                          } catch (error) {
+                            console.error('Failed to recreate blob URL for analyzed image:', error);
+                          }
+                        }
+                        
+                        // Last resort: try to fetch from backend
+                        if (!e.target.dataset.backendTried) {
+                          e.target.dataset.backendTried = 'true';
+                          console.log('Trying backend fetch for analyzed image');
+                          fetchImageFromBackend().then(() => {
+                            if (imagePreview && imagePreview !== e.target.src) {
+                              e.target.src = imagePreview;
+                            }
+                          });
+                        }
+                      }}
                     />
                     {/* Real Roboflow Bounding Boxes */}
                     <div className="absolute inset-0">
@@ -853,8 +1036,20 @@ const AnalysisResults = () => {
                     </div>
                   </>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <BloodCellAI className="w-16 h-16 text-gray-400" />
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                    <BloodCellAI className="w-16 h-16 text-gray-400 mb-2" />
+                    <p className="text-sm">Analysis image not available</p>
+                    {analysisData?.fileName && (
+                      <p className="text-xs text-gray-400 mt-1">{analysisData.fileName}</p>
+                    )}
+                    {/* Show detection info even without image */}
+                    {(results.roboflowPredictions?.length > 0 || results.detectedCells?.length > 0) && (
+                      <div className="mt-3 text-center">
+                        <p className="text-xs text-blue-600 font-medium">
+                          {results.roboflowPredictions?.length || results.detectedCells?.length} cells detected
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
