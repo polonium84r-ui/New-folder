@@ -1,0 +1,313 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+  body {
+    @apply bg-gradient-to-br from-gray-50 to-blue-50 text-gray-900 font-sans antialiased;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-medical-500 to-primary-600 text-white font-semibold py-3 px-6 rounded-xl shadow-colored;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-gray-700 font-semibold py-3 px-6 rounded-xl border border-gray-200 shadow-soft;
+  }
+  
+  .btn-success {
+    @apply bg-gradient-to-r from-success-500 to-success-600 text-white font-semibold py-3 px-6 rounded-xl shadow-soft;
+  }
+  
+  .btn-warning {
+    @apply bg-gradient-to-r from-warning-500 to-warning-600 text-white font-semibold py-3 px-6 rounded-xl shadow-soft;
+  }
+  
+  .btn-danger {
+    @apply bg-gradient-to-r from-danger-500 to-danger-600 text-white font-semibold py-3 px-6 rounded-xl shadow-soft;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl shadow-soft border border-gray-100 p-6;
+  }
+  
+  .card-colored {
+    @apply bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-colored border border-blue-100 p-6;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-medical-500 focus:border-transparent bg-white shadow-soft;
+  }
+  
+  /* Hide browser default password reveal button */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
+  
+  input[type="password"]::-webkit-credentials-auto-fill-button,
+  input[type="password"]::-webkit-strong-password-auto-fill-button {
+    display: none !important;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-medical-600 to-primary-600 bg-clip-text text-transparent;
+  }
+  
+  .glass-effect {
+    @apply bg-white/80 backdrop-blur-sm border border-white/20;
+  }
+  
+  .medical-gradient {
+    background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+  }
+  
+  .success-gradient {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  }
+  
+  .warning-gradient {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  }
+  
+  .danger-gradient {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+  
+  .purple-gradient {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  }
+  
+  .feature-card {
+    @apply bg-white rounded-2xl p-8 shadow-soft border border-gray-100;
+  }
+  
+  .icon-wrapper {
+    @apply w-16 h-16 rounded-2xl flex items-center justify-center shadow-soft;
+  }
+  
+  .status-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  /* Navbar specific styles */
+  .navbar-gradient {
+    @apply bg-gradient-to-r from-white via-blue-50 to-white;
+  }
+  
+  .nav-button-active {
+    @apply bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-md;
+  }
+  
+  .nav-button-inactive {
+    @apply text-gray-600;
+  }
+  
+  .user-badge {
+    @apply bg-gray-50 rounded-full px-4 py-2 border border-gray-200 shadow-sm;
+  }
+  
+  .logout-button {
+    @apply bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-md;
+  }
+  
+  .mobile-nav-item {
+    @apply flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium;
+  }
+  
+  .mobile-nav-active {
+    @apply bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-md;
+  }
+  
+  .mobile-nav-inactive {
+    @apply text-gray-700;
+  }
+  
+  /* Backdrop blur support */
+  .backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  
+  /* Gradient text effect */
+  .gradient-text-hero {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Custom gradient colors for hero section */
+  .hero-gradient {
+    background: linear-gradient(135deg, #3FC5FA 0%, #9095CF 50%, #E864A6 100%);
+  }
+  
+  .hero-gradient-overlay {
+    background: linear-gradient(to top, rgba(232, 100, 166, 0.2) 0%, transparent 50%, rgba(63, 197, 250, 0.2) 100%);
+  }
+  
+  /* Enhanced floating particles for new color scheme */
+  .particle-sky {
+    background: rgba(63, 197, 250, 0.3);
+    box-shadow: 0 0 20px rgba(63, 197, 250, 0.5);
+  }
+  
+  .particle-purple {
+    background: rgba(144, 149, 207, 0.3);
+    box-shadow: 0 0 20px rgba(144, 149, 207, 0.5);
+  }
+  
+  .particle-pink {
+    background: rgba(232, 100, 166, 0.3);
+    box-shadow: 0 0 20px rgba(232, 100, 166, 0.5);
+  }
+  
+  /* Glowing effect for status dots */
+  .status-dot-admin {
+    background: #E864A6;
+    box-shadow: 0 0 10px rgba(232, 100, 166, 0.6);
+  }
+  
+  .status-dot-doctor {
+    background: #3FC5FA;
+    box-shadow: 0 0 10px rgba(63, 197, 250, 0.6);
+  }
+  
+  /* Enhanced backdrop blur for new color scheme */
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+  
+  .glass-effect-strong {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Responsive layout fixes */
+  .full-height-gradient {
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+  
+  /* Mobile-first responsive design */
+  @media (max-width: 640px) {
+    .hero-title {
+      font-size: 1.5rem;
+      line-height: 1.2;
+    }
+    
+    .hero-subtitle {
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+    
+    .hero-button {
+      font-size: 0.875rem;
+      padding: 0.75rem 1.5rem;
+    }
+  }
+  
+  @media (min-width: 641px) and (max-width: 768px) {
+    .hero-title {
+      font-size: 2rem;
+      line-height: 1.1;
+    }
+    
+    .hero-subtitle {
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .hero-title {
+      font-size: 2.5rem;
+      line-height: 1.1;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.125rem;
+      line-height: 1.6;
+    }
+  }
+  
+  /* Ensure no white space at bottom */
+  html, body {
+    height: 100%;
+    overflow-x: hidden;
+  }
+  
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  
+  /* Fix for mobile viewport issues */
+  @supports (-webkit-touch-callout: none) {
+    .full-height-gradient {
+      min-height: -webkit-fill-available;
+    }
+  }
+  
+  /* Toast notification overrides */
+  [data-hot-toast] {
+    z-index: 99999 !important;
+  }
+  
+  .Toaster {
+    z-index: 99999 !important;
+  }
+  
+  .Toaster > div {
+    z-index: 99999 !important;
+  }
+  
+  /* Enhanced toast visibility */
+  [data-hot-toast] > div {
+    min-height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Error toast specific styling */
+  [data-hot-toast] > div[data-type="error"] {
+    min-height: 80px !important;
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    background: #dc2626 !important;
+    color: white !important;
+    border: 3px solid #991b1b !important;
+    box-shadow: 0 25px 50px rgba(220, 38, 38, 0.4) !important;
+    border-radius: 16px !important;
+    padding: 24px 32px !important;
+    cursor: pointer !important;
+    position: relative !important;
+  }
+  
+  /* Add a close hint to error toasts */
+  [data-hot-toast] > div[data-type="error"]::after {
+    content: "Click to dismiss" !important;
+    position: absolute !important;
+    bottom: 8px !important;
+    right: 12px !important;
+    font-size: 12px !important;
+    opacity: 0.8 !important;
+    font-weight: normal !important;
+  }
+}

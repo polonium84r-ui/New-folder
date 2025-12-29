@@ -1,0 +1,45 @@
+services:
+  # Backend API Service
+  - type: web
+    name: all-screening-backend
+    env: node
+    plan: starter
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: all-screening-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ROBOFLOW_API_KEY
+        sync: false
+      - key: ROBOFLOW_PROJECT
+        sync: false
+      - key: FRONTEND_URL
+        value: https://all-screening-frontend.onrender.com
+
+  # Frontend Static Site
+  - type: web
+    name: all-screening-frontend
+    env: static
+    plan: starter
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://all-screening-backend.onrender.com/api
+      - key: REACT_APP_VERSION
+        value: 1.0.0
+
+databases:
+  # MongoDB Atlas connection will be configured separately
+  - name: all-screening-db
+    plan: starter
