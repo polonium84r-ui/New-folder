@@ -2,10 +2,8 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  // Use environment variable for API URL in production, fallback to relative path for development
-  baseURL: process.env.NODE_ENV === 'production' 
-    ? process.env.REACT_APP_API_URL 
-    : '/api',
+  // Use relative path for single-service deployment
+  baseURL: '/api',
   timeout: 30000, // 30 seconds timeout
   headers: {
     'Content-Type': 'application/json',
