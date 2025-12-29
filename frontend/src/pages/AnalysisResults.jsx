@@ -15,7 +15,6 @@ import {
   AlertCircle
 } from 'lucide-react';
 import BloodCellAI from '../components/icons/BloodCellAI';
-import ImageDebugPanel from '../components/ImageDebugPanel';
 
 const AnalysisResults = () => {
   const navigate = useNavigate();
@@ -1431,9 +1430,6 @@ const AnalysisResults = () => {
           </div>
         )}
       </div>
-      
-      {/* Debug Panel - Remove in production */}
-      <ImageDebugPanel />
     </div>
   );
 };
