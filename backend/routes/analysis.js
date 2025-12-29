@@ -308,7 +308,10 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     res.json({
       analysisId: analysis._id,
       status: analysis.status,
-      results: analysis.analysisResults
+      results: {
+        ...analysis.analysisResults,
+        imageUrl: analysis.imageUrl // Always include imageUrl in results
+      }
     });
 
   } catch (error) {
@@ -563,7 +566,7 @@ router.post('/process', async (req, res) => {
       status: 'completed',
       results: {
         ...analysis.analysisResults,
-        imageUrl: analysis.imageUrl // Include the image URL in the response
+        imageUrl: analysis.imageUrl // Always include the image URL in the response
       }
     });
 

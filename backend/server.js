@@ -16,9 +16,9 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:"], // Add blob: support for image loading
       scriptSrc: ["'self'"],
-      connectSrc: ["'self'", "https://api.roboflow.com"]
+      connectSrc: ["'self'", "https://api.roboflow.com", "https://serverless.roboflow.com"]
     }
   }
 }));

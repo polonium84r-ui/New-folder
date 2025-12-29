@@ -114,21 +114,35 @@ const AnalysisProcessing = () => {
           if (response.data.success) {
             toast.success('Analysis completed successfully!');
             
-            // Navigate to results page
+            // Navigate to results page with comprehensive image data
             setTimeout(() => {
-              // Store image data for results page
+              // Store image data for results page with better key management
               if (analysisData.base64) {
                 sessionStorage.setItem('currentAnalysisImage', analysisData.base64);
                 sessionStorage.setItem('currentAnalysisImageName', analysisData.fileName);
+                console.log('💾 Stored image data in sessionStorage for results page');
               }
+              
+              // Ensure imageUrl is included in results
+              const resultsWithImage = {
+                ...response.data.results,
+                imageUrl: response.data.results.imageUrl || analysisData.base64
+              };
+              
+              console.log('🧭 Navigating to results with data:', {
+                hasResults: !!resultsWithImage,
+                hasImageUrl: !!resultsWithImage.imageUrl,
+                hasAnalysisId: !!response.data.analysisId,
+                hasImageData: !!analysisData.base64
+              });
               
               navigate('/analysis-results', {
                 state: {
-                  results: response.data.results,
+                  results: resultsWithImage,
                   patientInfo: defaultPatientInfo,
                   analysisId: response.data.analysisId,
                   analysisData: analysisData,
-                  imageData: analysisData.base64 // Include base64 image data
+                  imageData: analysisData.base64 // Include base64 image data as fallback
                 }
               });
             }, 1500);

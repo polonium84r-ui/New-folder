@@ -15,6 +15,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import BloodCellAI from '../components/icons/BloodCellAI';
+import ImageDebugPanel from '../components/ImageDebugPanel';
 
 const AnalysisResults = () => {
   const navigate = useNavigate();
@@ -67,54 +68,124 @@ const AnalysisResults = () => {
     };
   }, [results, analysisData, navigate]);
 
+  // Helper function to test if an image URL is valid
+  const testImageLoad = (url) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        console.log(`✅ Image loaded successfully: ${url.substring(0, 50)}...`);
+        resolve(true);
+      };
+      img.onerror = (error) => {
+        console.warn(`❌ Image failed to load: ${url.substring(0, 50)}...`, error);
+        resolve(false);
+      };
+      img.src = url;
+      
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        console.warn(`⏰ Image load timeout: ${url.substring(0, 50)}...`);
+        resolve(false);
+      }, 5000);
+    });
+  };
+
   // Comprehensive image loading with multiple fallback methods
   const loadImageData = async () => {
-    console.log('Loading image data...');
+    console.log('🔍 Loading image data with enhanced debugging...');
     
-    // Method 1: Try imageUrl from results (backend response)
-    if (results?.imageUrl) {
-      console.log('Using imageUrl from results');
-      setImagePreview(results.imageUrl);
-      return;
-    }
+    const methods = [
+      {
+        name: 'Backend API Response (results.imageUrl)',
+        getter: () => results?.imageUrl,
+        priority: 1
+      },
+      {
+        name: 'Navigation State Image Data',
+        getter: () => location.state?.imageData,
+        priority: 2
+      },
+      {
+        name: 'Analysis Data Base64',
+        getter: () => analysisData?.base64,
+        priority: 3
+      },
+      {
+        name: 'Session Storage',
+        getter: () => sessionStorage.getItem('currentAnalysisImage'),
+        priority: 4
+      },
+      {
+        name: 'File Object to Blob URL',
+        getter: () => {
+          if (analysisData?.file) {
+            try {
+              const blobUrl = URL.createObjectURL(analysisData.file);
+              console.log('🔗 Created blob URL:', blobUrl);
+              return blobUrl;
+            } catch (error) {
+              console.warn('Failed to create blob URL:', error);
+              return null;
+            }
+          }
+          return null;
+        },
+        priority: 5
+      }
+    ];
+
+    // Sort by priority and try each method
+    methods.sort((a, b) => a.priority - b.priority);
     
-    // Method 2: Try base64 data from navigation state
-    if (location.state?.imageData) {
-      console.log('Using base64 data from navigation state');
-      setImagePreview(location.state.imageData);
-      return;
-    }
-    
-    // Method 3: Try base64 data from analysisData
-    if (analysisData?.base64) {
-      console.log('Using base64 data from analysisData');
-      setImagePreview(analysisData.base64);
-      return;
-    }
-    
-    // Method 4: Try sessionStorage
-    const storedImage = sessionStorage.getItem('currentAnalysisImage');
-    if (storedImage) {
-      console.log('Using image from sessionStorage');
-      setImagePreview(storedImage);
-      return;
-    }
-    
-    // Method 5: Try file object
-    if (analysisData?.file) {
+    for (const method of methods) {
       try {
-        console.log('Creating blob URL from file object');
-        const url = URL.createObjectURL(analysisData.file);
-        setImagePreview(url);
-        
-        // Cleanup URL when component unmounts
-        return () => URL.revokeObjectURL(url);
+        const imageUrl = method.getter();
+        if (imageUrl) {
+          console.log(`🧪 Trying method: ${method.name}`);
+          console.log(`📊 Image URL type: ${typeof imageUrl}`);
+          console.log(`📊 Image URL length: ${imageUrl.length}`);
+          console.log(`📊 Image URL preview: ${imageUrl.substring(0, 100)}...`);
+          console.log(`📊 Starts with data:: ${imageUrl.startsWith('data:')}`);
+          console.log(`📊 Starts with blob:: ${imageUrl.startsWith('blob:')}`);
+          
+          // Test if image loads successfully
+          const isValid = await testImageLoad(imageUrl);
+          if (isValid) {
+            console.log(`🎉 SUCCESS with method: ${method.name}`);
+            setImagePreview(imageUrl);
+            
+            // Store successful image in sessionStorage for future use (but don't overwrite if it came from sessionStorage)
+            if (method.name !== 'Session Storage') {
+              try {
+                sessionStorage.setItem('currentAnalysisImage', imageUrl);
+                console.log('💾 Stored successful image in sessionStorage');
+              } catch (storageError) {
+                console.warn('Failed to store in sessionStorage:', storageError);
+              }
+            }
+            return;
+          } else {
+            console.warn(`❌ FAILED to load image with method: ${method.name}`);
+          }
+        } else {
+          console.log(`⚠️ No data available for method: ${method.name}`);
+        }
       } catch (error) {
-        console.warn('Failed to create object URL from file:', error);
+        console.error(`💥 Error with method ${method.name}:`, error);
+        
+        // Log specific error types for debugging
+        if (error.name === 'SecurityError') {
+          console.error('🔒 Security error - possible CORS or CSP issue');
+        } else if (error.name === 'NetworkError') {
+          console.error('🌐 Network error - check connectivity');
+        } else if (error.message?.includes('blob')) {
+          console.error('🔗 Blob URL error - URL may have been revoked');
+        }
       }
     }
     
-    // Method 6: Try backend API
+    // If all methods fail, try backend API as last resort
+    console.log('🔄 All image loading methods failed, trying backend API as last resort...');
     await fetchImageFromBackend();
   };
 
@@ -123,32 +194,63 @@ const AnalysisResults = () => {
     try {
       const analysisId = location.state?.analysisId;
       if (!analysisId) {
-        console.warn('No analysis ID available to fetch image');
+        console.warn('❌ No analysis ID available to fetch image from backend');
         return;
       }
 
-      console.log('Fetching image from backend API...');
+      console.log('📡 Fetching image from backend API for analysis ID:', analysisId);
       const response = await fetch(`/api/analysis/${analysisId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
         }
       });
 
+      console.log('📊 Backend response status:', response.status);
+      console.log('📊 Backend response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
         const analysisData = await response.json();
+        console.log('📦 Backend response data keys:', Object.keys(analysisData));
+        console.log('📦 Has imageUrl:', !!analysisData.imageUrl);
+        console.log('📦 Has analysisResults:', !!analysisData.analysisResults);
+        
         if (analysisData.imageUrl) {
-          console.log('Successfully loaded image from backend');
-          setImagePreview(analysisData.imageUrl);
-          // Store in sessionStorage for future use
-          sessionStorage.setItem('currentAnalysisImage', analysisData.imageUrl);
+          console.log('📊 Backend imageUrl preview:', analysisData.imageUrl.substring(0, 100) + '...');
+          
+          // Test if the backend image loads
+          const isValid = await testImageLoad(analysisData.imageUrl);
+          if (isValid) {
+            console.log('✅ Successfully loaded image from backend API');
+            setImagePreview(analysisData.imageUrl);
+            // Store in sessionStorage for future use
+            try {
+              sessionStorage.setItem('currentAnalysisImage', analysisData.imageUrl);
+              console.log('💾 Stored backend image in sessionStorage');
+            } catch (storageError) {
+              console.warn('Failed to store backend image in sessionStorage:', storageError);
+            }
+          } else {
+            console.error('❌ Backend image URL failed to load');
+          }
         } else {
-          console.warn('No image URL found in backend response');
+          console.warn('⚠️ No image URL found in backend response');
+          console.log('📦 Full backend response:', analysisData);
         }
       } else {
-        console.error('Failed to fetch analysis from backend:', response.status);
+        console.error('❌ Failed to fetch analysis from backend:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('📄 Error response body:', errorText);
       }
     } catch (error) {
-      console.error('Error fetching image from backend:', error);
+      console.error('💥 Error fetching image from backend:', error);
+      
+      // Log specific error types
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.error('🌐 Network error - check if backend is running');
+      } else if (error.name === 'SyntaxError') {
+        console.error('📄 JSON parsing error - backend may have returned non-JSON response');
+      }
     }
   };
 
@@ -1329,6 +1431,9 @@ const AnalysisResults = () => {
           </div>
         )}
       </div>
+      
+      {/* Debug Panel - Remove in production */}
+      <ImageDebugPanel />
     </div>
   );
 };
