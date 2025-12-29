@@ -44,7 +44,37 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI)
-.then(() => console.log('Connected to MongoDB Atlas'))
+.then(async () => {
+  console.log('Connected to MongoDB Atlas');
+  
+  // Auto-create admin user if none exists
+  try {
+    const User = require('./models/User');
+    const adminExists = await User.findOne({ role: 'admin' });
+    
+    if (!adminExists) {
+      console.log('No admin user found. Creating default admin...');
+      
+      const adminUser = new User({
+        email: 'radarprojects.com',
+        password: 'Radar@2028',
+        name: 'System Administrator',
+        role: 'admin',
+        isActive: true,
+        mustChangePassword: false
+      });
+      
+      await adminUser.save();
+      console.log('✅ Default admin user created successfully!');
+      console.log('📧 Email: radarprojects.com');
+      console.log('🔑 Password: Radar@2028');
+    } else {
+      console.log('Admin user already exists');
+    }
+  } catch (error) {
+    console.error('Error creating admin user:', error);
+  }
+})
 .catch(err => console.error('MongoDB connection error:', err));
 
 // API Routes (must come before static files)
